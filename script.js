@@ -13,6 +13,24 @@ const currentDateTxt = document.querySelector(".current-date-txt");
 
 const apiKey = "2106ed0f99ac5c086fe8c5dc2aac612b";
 
+window.addEventListener("load", () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        updateWeatherByCoords(latitude, longitude);
+      },
+      (error) => {
+        console.error("Geolocation error:", error.message);
+        showDisplaySection(searchCitySection);
+      }
+    );
+  } else {
+    console.log("Geolocation not supported.");
+    showDisplaySection(searchCitySection);
+  }
+});
+
 searchBtn.addEventListener("click", () => {
   if (cityInput.value.trim() != "") {
     updateWeatherInfo(cityInput.value);
@@ -33,6 +51,12 @@ cityInput.addEventListener("keydown", (event) => {
 
 async function getFetchData(endPoint, city) {
   const apiUrl = `https://api.openweathermap.org/data/2.5/${endPoint}?q=${city}&appid=${apiKey}&units=metric`;
+  const response = await fetch(apiUrl);
+  return response.json();
+}
+
+async function getFetchDataByCoords(endPoint, lat, lon) {
+  const apiUrl = `https://api.openweathermap.org/data/2.5/${endPoint}?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
   const response = await fetch(apiUrl);
   return response.json();
 }
@@ -58,7 +82,7 @@ function getCurrentDate() {
 }
 
 async function updateWeatherInfo(city) {
-  document.querySelector(".loader").style.display = "block"; // Show loader
+  document.querySelector(".loader").style.display = "block";
 
   try {
     const weatherData = await getFetchData("weather", city);
@@ -91,7 +115,45 @@ async function updateWeatherInfo(city) {
     console.error("API error:", error);
     showDisplaySection(notFoundSection);
   } finally {
-    document.querySelector(".loader").style.display = "none"; // Hide loader
+    document.querySelector(".loader").style.display = "none";
+  }
+}
+
+async function updateWeatherByCoords(lat, lon) {
+  document.querySelector(".loader").style.display = "block";
+
+  try {
+    const weatherData = await getFetchDataByCoords("weather", lat, lon);
+    const forecastData = await getFetchDataByCoords("forecast", lat, lon);
+
+    if (weatherData.cod != 200) {
+      showDisplaySection(notFoundSection);
+      return;
+    }
+
+    const {
+      name: country,
+      main: { temp, humidity },
+      weather: [{ id, main }],
+      wind: { speed },
+    } = weatherData;
+
+    countryTxt.textContent = country;
+    tempTxt.textContent = Math.round(temp) + " °C";
+    conditionTxt.textContent = main;
+    humidityValueTxt.textContent = humidity + "%";
+    windValueTxt.textContent = speed + " m/s";
+    currentDateTxt.textContent = getCurrentDate();
+    weatherSummaryImg.src = `weather/${getWeatherIcon(id)}`;
+
+    updateForecastUI(forecastData.list);
+
+    showDisplaySection(weatherInfoSection);
+  } catch (error) {
+    console.error("API error:", error);
+    showDisplaySection(notFoundSection);
+  } finally {
+    document.querySelector(".loader").style.display = "none";
   }
 }
 
@@ -107,15 +169,15 @@ function updateForecastUI(forecastList) {
   const dailyForecastMap = {};
 
   for (let item of forecastList) {
-    const utcDate = new Date(item.dt_txt + " UTC"); // Force UTC interpretation
-    const dayKey = utcDate.toISOString().split("T")[0]; // YYYY-MM-DD
+    const utcDate = new Date(item.dt_txt + " UTC");
+    const dayKey = utcDate.toISOString().split("T")[0];
 
     if (!dailyForecastMap[dayKey] && utcDate.getUTCHours() === 12) {
       dailyForecastMap[dayKey] = item;
     }
   }
 
-  const dailyForecasts = Object.values(dailyForecastMap).slice(1, 5); // Skip today
+  const dailyForecasts = Object.values(dailyForecastMap).slice(1, 5);
 
   dailyForecasts.forEach((forecast, index) => {
     const date = new Date(forecast.dt_txt + " UTC");

@@ -13,6 +13,14 @@ const currentDateTxt = document.querySelector(".current-date-txt");
 
 const apiKey = "2106ed0f99ac5c086fe8c5dc2aac612b";
 
+function normalizeCityName(city) {
+  return city
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 window.addEventListener("load", () => {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
@@ -32,18 +40,20 @@ window.addEventListener("load", () => {
 });
 
 searchBtn.addEventListener("click", () => {
-  if (cityInput.value.trim() != "") {
-    updateWeatherInfo(cityInput.value);
-    console.log(cityInput.value);
+  if (cityInput.value.trim() !== "") {
+    const normalizedCity = normalizeCityName(cityInput.value);
+    updateWeatherInfo(normalizedCity);
+    console.log(normalizedCity);
     cityInput.value = "";
     cityInput.blur();
   }
 });
 
 cityInput.addEventListener("keydown", (event) => {
-  if (event.key == "Enter" && cityInput.value.trim() != "") {
-    updateWeatherInfo(cityInput.value);
-    console.log(cityInput.value);
+  if (event.key === "Enter" && cityInput.value.trim() !== "") {
+    const normalizedCity = normalizeCityName(cityInput.value);
+    updateWeatherInfo(normalizedCity);
+    console.log(normalizedCity);
     cityInput.value = "";
     cityInput.blur();
   }

@@ -43,7 +43,6 @@ searchBtn.addEventListener("click", () => {
   if (cityInput.value.trim() !== "") {
     const normalizedCity = normalizeCityName(cityInput.value);
     updateWeatherInfo(normalizedCity);
-    console.log(normalizedCity);
     cityInput.value = "";
     cityInput.blur();
   }
@@ -53,7 +52,6 @@ cityInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && cityInput.value.trim() !== "") {
     const normalizedCity = normalizeCityName(cityInput.value);
     updateWeatherInfo(normalizedCity);
-    console.log(normalizedCity);
     cityInput.value = "";
     cityInput.blur();
   }
@@ -187,11 +185,19 @@ function updateForecastUI(forecastList) {
     }
   }
 
-  const dailyForecasts = Object.values(dailyForecastMap).slice(1, 5);
+  const sortedDates = Object.keys(dailyForecastMap).sort(
+    (a, b) => new Date(a) - new Date(b)
+  );
+
+  const dailyForecasts = sortedDates
+    .slice(0, 5)
+    .map((day) => dailyForecastMap[day]);
 
   dailyForecasts.forEach((forecast, index) => {
+    if (!forecastItems[index]) return;
     const date = new Date(forecast.dt_txt + " UTC");
     const day = date.toLocaleDateString("en-GB", {
+      weekday: "short",
       day: "2-digit",
       month: "short",
     });

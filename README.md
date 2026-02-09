@@ -277,16 +277,3 @@ All dependencies are loaded from CDNs:
 
 ---
 
-## 📝 License
-
-This project is open source and available for personal and educational use.
-
----
-
-## 👨‍💻 Author
-
-Created as a weather application project demonstrating API integration, modern web design, and JavaScript functionality.
-
----
-
-**Last Updated**: February 2026
